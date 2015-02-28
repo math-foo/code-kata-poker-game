@@ -48,7 +48,7 @@ class Card(object):
 		if not isinstance(other, Card):
 			raise CardComparisonError('Attempted to compare Card to ' + str(type(other)))
 
-		return -1 * cmp((self.value, self.suit), (other.value, other.suit))
+		return -cmp((self.value, self.suit), (other.value, other.suit))
 
 
 class DeckOfCards(object):
@@ -60,7 +60,7 @@ class DeckOfCards(object):
 		return len(self.cards_left)
 
 	def draw_card(self):
-		if self.num_of_cards() > 0:
+		if self.num_of_cards():
 			new_card = random.choice(self.cards_left)	
 			self.cards_left.remove(new_card)
 			return new_card

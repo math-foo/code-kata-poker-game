@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
+from collections import defaultdict
 from deck_of_cards import Card, DeckOfCards, SUITS, NAMED_VALUES
-import random
 
 
 class Error(Exception):
@@ -15,17 +15,100 @@ class ScoredPokerHandInitializationCardTypeError(Error):
 	def __init__(self, msg):
 		self.msg = msg
 
+class ScoredPokerHandInitializationCardUniquenessError(Error):
+	def __init__(self, msg):
+		self.msg = msg
+
+class PokerHandScoreInitializationRangeError(Error):
+	def __init__(self, msg):
+		self.msg = msg
+
+class PokerHandScoreInitializationSideCardError(Error):
+	def __init__(self, msg):
+		self.msg = msg
+
+class PokerHandScoreInitializationScoreClassError(Error):
+	def __init__(self, msg):
+		self.msg = msg
+
 def cardValueName(value):
 	return NAMED_VALUES[value]
+
+def createHistograms(list_of_values):
+	histogram = defaultdict(int)
+	for value in list_of_values:
+		histogram[value] += 1
+
+	inverse_histogram = defaultdict(list)
+	for key,val in histogram.items():
+		inverse_histogram[val].append(key)
+
+	return histogram, inverse_histogram
 
 class PokerHandScore(object):
 	SCORE_CLASS = ["High Card", "Pair", "Two pair", "Three", "Straight", "Flush", "Full house", "Four", "Straight flush", "Royal flush"]
 
 	def __init__(self, score_class, value=0, secondary_value=0, side_cards=[]):
+		if score_class < 0 or score_class > 9:
+			raise PokerHandScoreInitializationRangeError("score_class must be between 0 and 9, actual value: " + str(score_class))
 		self.score_class = score_class
+
+		
+		if value < 0 or value > 14 or value == 1:
+			raise PokerHandScoreInitializationRangeError("value must be 0 or between 2 and 14, actual value: " + str(value))
 		self.value = value
+
+
+		if secondary_value < 0 or secondary_value > 14 or secondary_value == 1:
+			raise PokerHandScoreInitializationRangeError("secondary_value must be 0 or between 2 and 14, actual value: " + str(secondary_value))
 		self.secondary_value = secondary_value
+		
+		num_of_side_cards = len(side_cards)
+
+		if num_of_side_cards > 5 or num_of_side_cards == 4:
+			raise PokerHandScoreInitializationSideCardError("There must be, 0,1,2,3 or 5 side cards, found " + str(len(side_cards)) + " side_cards")
+		for card in side_cards:
+			if not isinstance(card, Card):
+				raise PokerHandScoreInitializationSideCardError("All side_cards must be of type Card, found element of type " + str(type(card)))
 		self.side_cards = side_cards
+
+		if num_of_side_cards == 5:
+			if self.score_class not in [5,0]:
+				raise PokerHandScoreInitializationScoreClassError("5 side cards can only occur with " + SCORE_CLASS[0] + " and " + SCORE_CLASS[5] +
+										  " hands, seen with a " + SCORE_CALSSS[self.score_class] + " hand")
+		elif num_of_side_cards == 3:
+			if self.score_class != 1:
+				raise PokerHandScoreInitializationScoreClassError("3 side cards can only occur with a " + SCORE_CLASS[1] +
+										  " hand, seen with a " + SCORE_CALSSS[self.score_class] + " hand")
+		elif num_of_side_cards == 2:
+			if self.score_class != 3:
+				raise PokerHandScoreInitializationScoreClassError("2 side cards can only occur with a " + SCORE_CLASS[3] +
+										  " of a kind hand, seen with a " + SCORE_CALSSS[self.score_class] + " hand")
+		elif num_of_side_cards == 1:
+			if self.score_class not in [7,2]:
+				raise PokerHandScoreInitializationScoreClassError("1 side card can only occur with a " + SCORE_CLASS[7] + " of a kind and " +
+										  SCORE_CLASS[2] + " hands, seen with a " + SCORE_CALSSS[self.score_class] + " hand")
+		elif num_of_side_cards == 0:
+			if self.score_class not in [4,6,8,9]:
+				raise PokerHandScoreInitializationScoreClassError("No side cards cannot occur with a " + SCORE_CLASS[self.core_class] + " hand")
+
+		if value > 0 and secondary_value > 0:
+			if self.score_class not in [2,6]:
+				raise PokerHandScoreInitializationScoreClassError("value > 0 and secondary_value> 0 can only occur with " + SCORE_CLASS[2] + " and " + SCORE_CLASS[6] +
+										  " hands, seen with a " + SCORE_CALSSS[self.score_class] + " hand")
+		elif secondary_value > 0:
+			raise PokerHandScoreInitializationScoreClassError("secondary_value should not be non-zero with value equal to 0")
+		elif value > 0:
+			if self.score_class in [2,6]:
+				raise PokerHandScoreInitializationScoreClassError("secondary_value must be non-zero for a " + SCORE_CLASS[self.core_class] + " hand")
+			elif self.score_class == 9:
+				raise PokerHandScoreInitializationScoreClassError("value must be zero for a " + SCORE_CLASS[self.core_class] + " hand")
+		else:
+			if self.score_class != 9:
+				raise PokerHandScoreInitializationScoreClassError("value can only be 0 with " + SCORE_CLASS[9] + " hand, seen with a " +
+										  SCORE_CALSSS[self.score_class] + " hand")
+				
+		
 
 	def score_tuple(self):
 		return (self.score_class, self.value, self.secondary_value) + tuple( card.value for card in self.side_cards )
@@ -34,27 +117,31 @@ class PokerHandScore(object):
 		return cmp( self.score_tuple(), other.score_tuple )
 
 	def score_message(self, suit=None):
-		message = ""
+		# add checks that suit is a suit
+		# add checks that classes that need suits get them
+
+		# All messages start with the score class name
+		message = self.SCORE_CLASS[self.score_class]
 		if self.score_class == 9:
-			message = self.SCORE_CLASS[self.score_class] + " in " + suit
+			message += " in " + suit
 		elif self.score_class == 8:
-			message = self.SCORE_CLASS[self.score_class] + " in " + suit + ", " + cardValueName(self.value) + " high"
+			message += " in " + suit + ", " + cardValueName(self.value) + " high"
 		elif self.score_class == 7:
-			message = self.SCORE_CLASS[self.score_class] + " " + cardValueName(self.value) + "s, "
+			message += " " + cardValueName(self.value) + "s, "
 		elif self.score_class == 6:
-			message = self.SCORE_CLASS[self.score_class] + ": " + cardValueName(self.value) + "s full of " + cardValueName(self.secondary_value) + "s"
+			message += ": " + cardValueName(self.value) + "s full of " + cardValueName(self.secondary_value) + "s"
 		elif self.score_class == 5:
-			message = self.SCORE_CLASS[self.score_class] + " in " + suit + ", " + cardValueName(self.value) + " high, "
+			message += " in " + suit + ", " + cardValueName(self.value) + " high, "
 		elif self.score_class == 4:
-			message = self.SCORE_CLASS[self.score_class] + ", " + cardValueName(self.value) + " high"
+			message += ", " + cardValueName(self.value) + " high"
 		elif self.score_class == 3:
-			message = self.SCORE_CLASS[self.score_class] + " " + cardValueName(self.value) + "s, "
+			message += " " + cardValueName(self.value) + "s, "
 		elif self.score_class == 2:
-			message = self.SCORE_CLASS[self.score_class] + ": " + cardValueName(self.value) + "s over " + cardValueName(self.secondary_value) + "s, "
+			message += ": " + cardValueName(self.value) + "s over " + cardValueName(self.secondary_value) + "s, "
 		elif self.score_class == 1:
-			message = self.SCORE_CLASS[self.score_class] + " of " + cardValueName(self.value) + "s, "
+			message += " of " + cardValueName(self.value) + "s, "
 		elif self.score_class == 0:
-			message = self.SCORE_CLASS[self.score_class] + ": " + cardValueName(self.value) + " high, "
+			message += ": " + cardValueName(self.value) + " high, "
 
 		if len(self.side_cards) == 1:
 			message += cardValueName(self.side_cards[0].value) + " kicker"
@@ -76,7 +163,7 @@ class ScoredPokerHand(object):
 
 	def __init__(self, list_of_cards):
 		if len(list_of_cards) != 7:
-			raise ScoredPokerHandInitializationCardNumberError('Expected 7 cards, was given ' + str(len(list_of_cards)))
+			raise ScoredPokerHandInitializationCardNumberError('Expected 7 cards, was given {}'.format( len(list_of_cards)))
 		for card in list_of_cards:
 			if not isinstance(card, Card):
 				raise ScoredPokerHandInitializationCardTypeError('Expected elements of type Card, found element of type ' + str(type(card)))
@@ -84,102 +171,93 @@ class ScoredPokerHand(object):
 		self.played_cards = []
 		self.unplayed_cards = []
 
-		list_of_cards.sort()
-		self.list_of_cards = list_of_cards
-		list_of_suits = [card.suit for card in list_of_cards]
-		list_of_values = [card.value for card in list_of_cards]
-		list_of_values.sort()		
+		list_of_cards = self.list_of_cards = sorted( list_of_cards )
+
+		for card in list_of_cards:
+			if list_of_cards.count(card) > 1:
+				raise ScoredPokerHandInitializationCardUniquenessError('Expected all cards unique, found two instance of ' + str(card))
+		
+		value_histogram, inverse_value_histogram = createHistograms([card.value for card in list_of_cards])
+		suit_histogram, inverse_suit_histogram = createHistograms([card.suit for card in list_of_cards])
 
 		self.score = None
-
-		# scoring variables
-		flush = False
-		straight = 0
-		pair = 0
-		second_pair = 0
-		three_kind = 0
-		four_kind = 0
-		full_house = False
-		self.high_card = list_of_cards[0].value
-		self.second_high_card = list_of_cards[1].value
-		self.third_high_card = list_of_cards[2].value
-		self.fourth_high_card = list_of_cards[3].value
-		self.fifth_high_card = list_of_cards[4].value
 		self.flush_suit = None
+		flush = False
 
-		for suit in SUITS:
-			if list_of_suits.count(suit) > 4:
-				flush = True
-				self.flush_suit = suit
-		
-		for value in xrange(2,15):
-			if list_of_values.count(value) == 4:
-				four_kind = value
-			if list_of_values.count(value) == 3:
-				three_kind = value
-			if list_of_values.count(value) == 2:
-				second_pair = pair
-				pair = value
+		if any(x in inverse_suit_histogram for x in xrange(5,8)):
+			flush = True
+			self.flush_suit = [inverse_suit_histogram[x][0] for x in xrange(5,8) if x in inverse_suit_histogram][0]
 
-		for value in list_of_values:
-			if (value+1 in list_of_values and value+2 in list_of_values and value+3 in list_of_values):
-				if (value == 2 and 15 in list_of_values):
-					straight = value + 3
+		straight_high = 0
+
+		list_of_values = value_histogram.keys()
+
+		for value in value_histogram.keys():
+			if all( v in value_histogram.keys() for v in xrange(value+1, value+4) ):
+				if (value == 2 and 14 in list_of_values):
+					straight_high = value + 3
 				elif (value+4 in list_of_values):
-					straight = value + 4
+					straight_high = value + 4
 
-		if three_kind > 0 and pair > 0:
-			full_house = True
-
-		if straight > 0 and flush:
-			for value in xrange(straight-2, straight+1):
+		if straight_high > 0 and flush:
+			for value in xrange(straight_high-2, straight_high+1):
 				possible_straight_flush = [card for card in list_of_cards
-							   if card.suit == self.flush_suit and card.value in range(value-4,value+1)]
+							   if card.suit == self.flush_suit and card.value in xrange(value-4,value+1)]
+
+				if value == 5:
+					possible_straight_flush += [card for card in list_of_cards
+							   	    if card.suit == self.flush_suit and card.value == 14]
 
 				if len(possible_straight_flush) == 5:
-					possible_straight_flush.sort()
-					straight = value
+					straight_high = value
 					self.played_cards = possible_straight_flush[:]
 					self.unplayed_cards = [card for card in list_of_cards if card not in possible_straight_flush]
 
-					if straight == 14:
+					if straight_high == 14:
 						self.score = PokerHandScore(9)
 					else:
-						self.score = PokerHandScore(8, value=straight)
+						self.score = PokerHandScore(8, value=straight_high)
 			if self.score:
 				return
 
-		if four_kind > 0:
-			if self.high_card == four_kind:
-				self.high_card = self.fifth_high_card
+		if 4 in inverse_value_histogram:
+			value = inverse_value_histogram[4][-1]
 
-			high_card = [card for card in list_of_cards if card.value == self.high_card][0:1]
-			
-			self.played_cards = [card for card in list_of_cards if card.value == four_kind]
-			self.played_cards.append(high_card[0])
+			self.played_cards = [card for card in list_of_cards if card.value == value]
 			self.unplayed_cards = [card for card in list_of_cards if card not in self.played_cards]
-			self.score = PokerHandScore(7, value=four_kind, side_cards=high_card)
-		elif full_house:
-			self.unplayed_cards = [card for card in list_of_cards if card.value != three_kind and card.value != pair]
-			self.played_cards = [card for card in list_of_cards if card.value == three_kind]
-			self.played_cards += [card for card in list_of_cards if card.value == pair]
-			self.score = PokerHandScore(6, value=three_kind, secondary_value=pair)
+			high_card = self.unplayed_cards[0:1]
+
+			self.played_cards.append(high_card[0])
+			self.unplayed_cards = self.unplayed_cards[1:]
+			self.score = PokerHandScore(7, value=value, side_cards=high_card)
+		elif 3 in inverse_value_histogram and 2 in inverse_value_histogram:
+			three_value = inverse_value_histogram[3][-1]
+			pair_value = inverse_value_histogram[2][-1]
+			self.unplayed_cards = [card for card in list_of_cards if card.value != three_value and card.value != pair_value]
+			self.played_cards = [card for card in list_of_cards if card.value == three_value]
+			self.played_cards += [card for card in list_of_cards if card.value == pair_value]
+			self.score = PokerHandScore(6, value=three_value, secondary_value=pair_value)
 
 		elif flush:
 			flush_cards = [card for card in list_of_cards if card.suit == self.flush_suit]
-			flush_cards.sort()
 
 			self.played_cards = flush_cards[0:5]
 			self.unplayed_cards = [card for card in list_of_cards if card not in self.played_cards]
 			self.score = PokerHandScore(5, value=self.played_cards[0].value, side_cards=self.played_cards)
 
-		elif straight > 0:
-			self.played_cards = [card for card in list_of_cards if card.value <= straight and card.value > straight-5]
+		elif straight_high > 0:
+			self.played_cards = [card for card in list_of_cards
+					     if card.value <= straight_high and card.value > straight_high-5]
+
+			if straight_high == 5:
+				self.unplayed_cards = [card for card in list_of_cards if card not in self.played_cards]
+				self.played_cards += self.unplayed_cards[0:1]
+				self.unplayed_cards = self.unplayed_cards[1:]
 
 			while len(self.played_cards) > 5:
 				card_to_remove = None
 				straight_values = [card.value for card in self.played_cards]
-				for i in xrange(straight-4,straight+1):
+				for i in xrange(straight_high-4,straight_high+1):
 					if straight_values.count(i) > 1:
 						card_to_remove = self.played_cards[straight_values.index(i)]
 						break
@@ -187,31 +265,38 @@ class ScoredPokerHand(object):
 				self.played_cards.remove(card_to_remove)
 
 			self.unplayed_cards = [card for card in list_of_cards if card not in self.played_cards]
-			self.score = PokerHandScore(4, value=straight)
+			self.score = PokerHandScore(4, value=straight_high)
 
-		elif three_kind > 0:
-			self.played_cards = [card for card in list_of_cards if card.value == three_kind]
+		elif 3 in inverse_value_histogram > 0:
+			value = inverse_value_histogram[3][-1]
+
+			self.played_cards = [card for card in list_of_cards if card.value == value]
 			self.unplayed_cards = [card for card in list_of_cards if card not in self.played_cards]
 			side_cards = self.unplayed_cards[0:2]
 			self.played_cards += side_cards
 			self.unplayed_cards = self.unplayed_cards[2:]			
-			self.score = PokerHandScore(3, value=three_kind, side_cards=side_cards)
+			self.score = PokerHandScore(3, value=value, side_cards=side_cards)
 
-		elif second_pair > 0:
-			self.played_cards = [card for card in list_of_cards if card.value == second_pair or card.value == pair]
+		elif 2 in inverse_value_histogram and len(inverse_value_histogram[2]) > 1:
+			pair_value = inverse_value_histogram[2][-1]
+			second_pair_value = inverse_value_histogram[2][-2]
+
+			self.played_cards = [card for card in list_of_cards if card.value == second_pair_value or card.value == pair_value]
 			self.unplayed_cards = [card for card in list_of_cards if card not in self.played_cards]
 			side_cards = self.unplayed_cards[0:1]
 			self.played_cards += side_cards
 			self.unplayed_cards = self.unplayed_cards[1:]			
-			self.score = PokerHandScore(2, value=pair, secondary_value=second_pair, side_cards=side_cards)	
+			self.score = PokerHandScore(2, value=pair_value, secondary_value=second_pair_value, side_cards=side_cards)	
 
-		elif pair > 0:
-			self.played_cards = [card for card in list_of_cards if card.value == pair]
+		elif 2 in inverse_value_histogram:
+			value = inverse_value_histogram[2][-1]
+
+			self.played_cards = [card for card in list_of_cards if card.value == value]
 			self.unplayed_cards = [card for card in list_of_cards if card not in self.played_cards]
 			side_cards = self.unplayed_cards[0:3]
 			self.played_cards += side_cards
 			self.unplayed_cards = self.unplayed_cards[3:]			
-			self.score = PokerHandScore(1, value=pair, secondary_value=second_pair, side_cards=side_cards)
+			self.score = PokerHandScore(1, value=value, side_cards=side_cards)
 
 		else:
 			self.played_cards = list_of_cards[0:5]
@@ -221,5 +306,5 @@ class ScoredPokerHand(object):
 	def score_message(self):
 		return self.score.score_message(suit=self.flush_suit)
 
-	def compare(self, scored_poker_hand):
+	def __cmp__(self, scored_poker_hand):
 		return cmp(self.score, scored_poker_hand.score)

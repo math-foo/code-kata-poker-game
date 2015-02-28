@@ -10,6 +10,44 @@ def cardCreator(suit, value):
 def cardListCreator(list_suit_value_tuples):
 	return [cardCreator(suit, value) for (suit, value) in list_suit_value_tuples]
 
+class testPokerHandScore(unittest.TestCase):
+	def test_initScoreClassNegative(self):
+		self.assertRaises(poker_hand.PokerHandScoreInitializationRangeError, poker_hand.PokerHandScore, -1)
+
+	def test_initScoreClassHigh(self):
+		self.assertRaises(poker_hand.PokerHandScoreInitializationRangeError, poker_hand.PokerHandScore, 10)
+
+	def test_initValueNegative(self):
+		self.assertRaises(poker_hand.PokerHandScoreInitializationRangeError, poker_hand.PokerHandScore, 0, value=-2)
+
+	def test_initValueOne(self):
+		self.assertRaises(poker_hand.PokerHandScoreInitializationRangeError, poker_hand.PokerHandScore, 0, value=1)
+
+	def test_initValueHigh(self):
+		self.assertRaises(poker_hand.PokerHandScoreInitializationRangeError, poker_hand.PokerHandScore, 0, value=20)
+
+	def test_initSecondaryValueNegative(self):
+		self.assertRaises(poker_hand.PokerHandScoreInitializationRangeError, poker_hand.PokerHandScore, 0, secondary_value=-2)
+
+	def test_initSecondaryValueOne(self):
+		self.assertRaises(poker_hand.PokerHandScoreInitializationRangeError, poker_hand.PokerHandScore, 0, secondary_value=1)
+
+	def test_initSecondaryValueHigh(self):
+		self.assertRaises(poker_hand.PokerHandScoreInitializationRangeError, poker_hand.PokerHandScore, 0, secondary_value=20)
+
+	def test_initTooManySideCards(self):
+		side_cards = cardListCreator([(0,2),(0,3),(1,4),(1,5),(2,6),(2,7)])
+		self.assertRaises(poker_hand.PokerHandScoreInitializationSideCardError, poker_hand.PokerHandScore, 0, side_cards=side_cards)
+
+	def test_initFourSideCards(self):
+		side_cards = cardListCreator([(0,2),(0,3),(1,4),(1,5)])
+		self.assertRaises(poker_hand.PokerHandScoreInitializationSideCardError, poker_hand.PokerHandScore, 0, side_cards=side_cards)
+
+	def test_initBadSideCard(self):
+		side_cards = cardListCreator([(0,2),(1,5)])
+		side_cards.append("Not a card")
+		self.assertRaises(poker_hand.PokerHandScoreInitializationSideCardError, poker_hand.PokerHandScore, 0, side_cards=side_cards)
+
 class testScoredPokerHandInit(unittest.TestCase):
 	def setUp(self):
 		self.list_of_cards = cardListCreator([(0,2),(1,4),(2,6),(3,8),(0,10),(1,12),(2,14)])
@@ -27,9 +65,15 @@ class testScoredPokerHandInit(unittest.TestCase):
 		self.list_of_cards.append("Not a card")
 		self.assertRaises(poker_hand.ScoredPokerHandInitializationCardTypeError, poker_hand.ScoredPokerHand, self.list_of_cards)
 
+	def test_initCardUniquenessError(self):
+		self.list_of_cards.pop()
+		self.list_of_cards.append(cardCreator(2, 6))
+		self.assertRaises(poker_hand.ScoredPokerHandInitializationCardUniquenessError, poker_hand.ScoredPokerHand, self.list_of_cards)
+
 	def test_initSuccessful(self):
 		scored_poker_hand = poker_hand.ScoredPokerHand(self.list_of_cards)
-		self.assertEquals(scored_poker_hand.high_card, 14)
+		self.assertEquals(scored_poker_hand.score.score_class, 0)
+		self.assertEquals(scored_poker_hand.score.value, 14)
 
 
 class testScoredPokerHand(unittest.TestCase):
@@ -70,6 +114,32 @@ class testScoredPokerHand(unittest.TestCase):
 
 		self.assertEquals(expected_played_cards, straight_flush_hand.played_cards)
 		self.assertEquals(expected_unplayed_cards, straight_flush_hand.unplayed_cards)
+
+	def test_StraightFlushAceLow(self):
+		straight = cardListCreator([(0,14),(0,2),(0,3),(0,4),(0,5),(3,7),(2,8)])
+		straight_hand = poker_hand.ScoredPokerHand(straight)
+
+		self.assertEquals(8, straight_hand.score.score_class)
+		self.assertEquals(5, straight_hand.score.value)
+
+		expected_played_cards =  cardListCreator([(0,5),(0,4),(0,3),(0,2),(0,14)])
+		expected_unplayed_cards = cardListCreator([(2,8),(3,7)])
+
+		self.assertEquals(expected_played_cards, straight_hand.played_cards)
+		self.assertEquals(expected_unplayed_cards, straight_hand.unplayed_cards)
+
+	def test_LoweredStraightFlushAceLow(self):
+		straight = cardListCreator([(0,14),(0,2),(0,3),(0,4),(0,5),(0,7),(1,6)])
+		straight_hand = poker_hand.ScoredPokerHand(straight)
+
+		self.assertEquals(8, straight_hand.score.score_class)
+		self.assertEquals(5, straight_hand.score.value)
+
+		expected_played_cards =  cardListCreator([(0,5),(0,4),(0,3),(0,2),(0,14)])
+		expected_unplayed_cards = cardListCreator([(0,7),(1,6)])
+
+		self.assertEquals(expected_played_cards, straight_hand.played_cards)
+		self.assertEquals(expected_unplayed_cards, straight_hand.unplayed_cards)
 
 	def test_FourOfAKind(self):
 		four_of_a_kind = cardListCreator([(3,7),(3,13),(3,2),(1,11),(0,11),(2,11),(3,11)])
@@ -158,6 +228,45 @@ class testScoredPokerHand(unittest.TestCase):
 
 		expected_played_cards =  cardListCreator([(2,10),(2,9),(1,8),(0,7),(2,6)])
 		expected_unplayed_cards = cardListCreator([(3,4),(2,2)])
+
+		self.assertEquals(expected_played_cards, straight_hand.played_cards)
+		self.assertEquals(expected_unplayed_cards, straight_hand.unplayed_cards)
+
+	def test_StraightAceLow(self):
+		straight = cardListCreator([(0,14),(2,2),(2,3),(1,4),(1,5),(3,7),(2,8)])
+		straight_hand = poker_hand.ScoredPokerHand(straight)
+
+		self.assertEquals(4, straight_hand.score.score_class)
+		self.assertEquals(5, straight_hand.score.value)
+
+		expected_played_cards =  cardListCreator([(1,5),(1,4),(2,3),(2,2),(0,14)])
+		expected_unplayed_cards = cardListCreator([(2,8),(3,7)])
+
+		self.assertEquals(expected_played_cards, straight_hand.played_cards)
+		self.assertEquals(expected_unplayed_cards, straight_hand.unplayed_cards)
+
+	def test_StraightAceLowPair(self):
+		straight = cardListCreator([(0,14),(2,2),(2,3),(1,4),(1,5),(3,3),(2,8)])
+		straight_hand = poker_hand.ScoredPokerHand(straight)
+
+		self.assertEquals(4, straight_hand.score.score_class)
+		self.assertEquals(5, straight_hand.score.value)
+
+		expected_played_cards =  cardListCreator([(1,5),(1,4),(2,3),(2,2),(0,14)])
+		expected_unplayed_cards = cardListCreator([(2,8),(3,3)])
+
+		self.assertEquals(expected_played_cards, straight_hand.played_cards)
+		self.assertEquals(expected_unplayed_cards, straight_hand.unplayed_cards)
+
+	def test_StraightAceLowAcePair(self):
+		straight = cardListCreator([(0,14),(2,2),(2,3),(1,4),(1,5),(3,7),(2,14)])
+		straight_hand = poker_hand.ScoredPokerHand(straight)
+
+		self.assertEquals(4, straight_hand.score.score_class)
+		self.assertEquals(5, straight_hand.score.value)
+
+		expected_played_cards =  cardListCreator([(1,5),(1,4),(2,3),(2,2),(2,14)])
+		expected_unplayed_cards = cardListCreator([(0,14),(3,7)])
 
 		self.assertEquals(expected_played_cards, straight_hand.played_cards)
 		self.assertEquals(expected_unplayed_cards, straight_hand.unplayed_cards)

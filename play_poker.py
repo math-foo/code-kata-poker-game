@@ -35,11 +35,9 @@ def play_poker():
 	print "Player 1's score:", player_1_scored_hand.score_message()
 	print "Player 2's score:", player_2_scored_hand.score_message()
 
-	compare_hands = player_1_scored_hand.compare(player_2_scored_hand)
-
-	if compare_hands > 0:
+	if player_1_scored_hand > player_2_scored_hand:
 		print "Player 1 wins!"
-	elif compare_hands < 0:
+	elif player_1_scored_hand < player_2_scored_hand:
 		print "Player 2 wins!"
 	else:
 		print "Tie Game"
