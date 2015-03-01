@@ -50,63 +50,77 @@ class PokerHandScore(object):
 
 	def __init__(self, score_class, value=0, secondary_value=0, side_cards=[]):
 		if score_class < 0 or score_class > 9:
-			raise PokerHandScoreInitializationRangeError("score_class must be between 0 and 9, actual value: " + str(score_class))
+			raise PokerHandScoreInitializationRangeError(
+				"score_class must be between 0 and 9, actual value: {0}".format(str(score_class)))
 		self.score_class = score_class
 
 		
 		if value < 0 or value > 14 or value == 1:
-			raise PokerHandScoreInitializationRangeError("value must be 0 or between 2 and 14, actual value: " + str(value))
+			raise PokerHandScoreInitializationRangeError(
+				"value must be 0 or between 2 and 14, actual value: {0}".format(str(value)))
 		self.value = value
 
 
 		if secondary_value < 0 or secondary_value > 14 or secondary_value == 1:
-			raise PokerHandScoreInitializationRangeError("secondary_value must be 0 or between 2 and 14, actual value: " + str(secondary_value))
+			raise PokerHandScoreInitializationRangeError(
+				"secondary_value must be 0 or between 2 and 14, actual value: {0}".format(str(secondary_value)))
 		self.secondary_value = secondary_value
 		
 		num_of_side_cards = len(side_cards)
 
 		if num_of_side_cards > 5 or num_of_side_cards == 4:
-			raise PokerHandScoreInitializationSideCardError("There must be, 0,1,2,3 or 5 side cards, found " + str(len(side_cards)) + " side_cards")
+			raise PokerHandScoreInitializationSideCardError(
+				"There must be, 0,1,2,3 or 5 side cards, found {0} side_cards".format(str(len(side_cards))))
 		for card in side_cards:
 			if not isinstance(card, Card):
-				raise PokerHandScoreInitializationSideCardError("All side_cards must be of type Card, found element of type " + str(type(card)))
+				raise PokerHandScoreInitializationSideCardError(
+					"All side_cards must be of type Card, found element of type {0}".format(str(type(card))))
 		self.side_cards = side_cards
 
 		if num_of_side_cards == 5:
 			if self.score_class not in [5,0]:
-				raise PokerHandScoreInitializationScoreClassError("5 side cards can only occur with " + SCORE_CLASS[0] + " and " + SCORE_CLASS[5] +
-										  " hands, seen with a " + SCORE_CALSSS[self.score_class] + " hand")
+				raise PokerHandScoreInitializationScoreClassError(
+					"5 side cards can only occur with {0} and {1} hands, seen with a {2} hand".format(
+						SCORE_CLASS[0], SCORE_CLASS[5], SCORE_CLASS[self.score_class]))
 		elif num_of_side_cards == 3:
 			if self.score_class != 1:
-				raise PokerHandScoreInitializationScoreClassError("3 side cards can only occur with a " + SCORE_CLASS[1] +
-										  " hand, seen with a " + SCORE_CALSSS[self.score_class] + " hand")
+				raise PokerHandScoreInitializationScoreClassError(
+					"3 side cards can only occur with a {0} hand, seen with a {1} hand".format(
+						SCORE_CLASS[1], SCORE_CLASS[self.score_class]))
 		elif num_of_side_cards == 2:
 			if self.score_class != 3:
-				raise PokerHandScoreInitializationScoreClassError("2 side cards can only occur with a " + SCORE_CLASS[3] +
-										  " of a kind hand, seen with a " + SCORE_CALSSS[self.score_class] + " hand")
+				raise PokerHandScoreInitializationScoreClassError(
+					"2 side cards can only occur with a {0} of a kind hand, seen with a {1} hand".format(
+						SCORE_CLASS[2], SCORE_CLASS[self.score_class]))
 		elif num_of_side_cards == 1:
 			if self.score_class not in [7,2]:
-				raise PokerHandScoreInitializationScoreClassError("1 side card can only occur with a " + SCORE_CLASS[7] + " of a kind and " +
-										  SCORE_CLASS[2] + " hands, seen with a " + SCORE_CALSSS[self.score_class] + " hand")
+				raise PokerHandScoreInitializationScoreClassError(
+					"1 side card can only occur with a {0} of a kind and {1} hands, seen with a {2} hand".format(
+						SCORE_CLASS[7], SCORE_CLASS[2], SCORE_CLASS[self.score_class]))
 		elif num_of_side_cards == 0:
 			if self.score_class not in [4,6,8,9]:
-				raise PokerHandScoreInitializationScoreClassError("No side cards cannot occur with a " + SCORE_CLASS[self.core_class] + " hand")
+				raise PokerHandScoreInitializationScoreClassError(
+					"No side cards cannot occur with a {0} hand".format(SCORE_CLASS[self.score_class]))
 
 		if value > 0 and secondary_value > 0:
 			if self.score_class not in [2,6]:
-				raise PokerHandScoreInitializationScoreClassError("value > 0 and secondary_value> 0 can only occur with " + SCORE_CLASS[2] + " and " + SCORE_CLASS[6] +
-										  " hands, seen with a " + SCORE_CALSSS[self.score_class] + " hand")
+				raise PokerHandScoreInitializationScoreClassError(
+					"value > 0 and secondary_value> 0 can only occur with {0} and {1} hands, seen with a {2} hand".format(
+						SCORE_CLASS[2], SCORE_CLASS[6], SCORE_CLASS[self.score_class]))
 		elif secondary_value > 0:
 			raise PokerHandScoreInitializationScoreClassError("secondary_value should not be non-zero with value equal to 0")
 		elif value > 0:
 			if self.score_class in [2,6]:
-				raise PokerHandScoreInitializationScoreClassError("secondary_value must be non-zero for a " + SCORE_CLASS[self.core_class] + " hand")
+				raise PokerHandScoreInitializationScoreClassError(
+					"secondary_value must be non-zero for a {0} hand".format(SCORE_CLASS[self.score_class]))
 			elif self.score_class == 9:
-				raise PokerHandScoreInitializationScoreClassError("value must be zero for a " + SCORE_CLASS[self.core_class] + " hand")
+				raise PokerHandScoreInitializationScoreClassError(
+					"value must be zero for a {0} hand".format(SCORE_CLASS[self.score_class]))
 		else:
 			if self.score_class != 9:
-				raise PokerHandScoreInitializationScoreClassError("value can only be 0 with " + SCORE_CLASS[9] + " hand, seen with a " +
-										  SCORE_CALSSS[self.score_class] + " hand")
+				raise PokerHandScoreInitializationScoreClassError(
+					"value can only be 0 with {0} hand, seen with a {1} hand".format(
+						SCORE_CLASS[9], SCORE_CLASS[self.score_class]))
 				
 		
 
@@ -123,37 +137,37 @@ class PokerHandScore(object):
 		# All messages start with the score class name
 		message = self.SCORE_CLASS[self.score_class]
 		if self.score_class == 9:
-			message += " in " + suit
+			message += " in {0}".format(suit)
 		elif self.score_class == 8:
-			message += " in " + suit + ", " + cardValueName(self.value) + " high"
+			message += " in {0}, {1} high".format(suit, cardValueName(self.value))
 		elif self.score_class == 7:
-			message += " " + cardValueName(self.value) + "s, "
+			message += " {0}s, ".format(cardValueName(self.value))
 		elif self.score_class == 6:
-			message += ": " + cardValueName(self.value) + "s full of " + cardValueName(self.secondary_value) + "s"
+			message += ": {0}s full of {1}s".format(cardValueName(self.value), cardValueName(self.secondary_value))
 		elif self.score_class == 5:
-			message += " in " + suit + ", " + cardValueName(self.value) + " high, "
+			message += " in {0}, {1} high, ".format(suit, cardValueName(self.value))
 		elif self.score_class == 4:
-			message += ", " + cardValueName(self.value) + " high"
+			message += ", {0} high".format(cardValueName(self.value))
 		elif self.score_class == 3:
-			message += " " + cardValueName(self.value) + "s, "
+			message += " {0}s, ".format(cardValueName(self.value))
 		elif self.score_class == 2:
-			message += ": " + cardValueName(self.value) + "s over " + cardValueName(self.secondary_value) + "s, "
+			message += ": {0}s over {1}s, ".format(cardValueName(self.value), cardValueName(self.secondary_value))
 		elif self.score_class == 1:
-			message += " of " + cardValueName(self.value) + "s, "
+			message += " of {0}s, ".format(cardValueName(self.value))
 		elif self.score_class == 0:
-			message += ": " + cardValueName(self.value) + " high, "
+			message += ": {0} high, ".format(cardValueName(self.value))
 
 		if len(self.side_cards) == 1:
-			message += cardValueName(self.side_cards[0].value) + " kicker"
+			message += "{0} kicker".format(cardValueName(self.side_cards[0].value))
 		elif len(self.side_cards) > 1:
 			if len(self.side_cards) == 5:
 				for card in self.side_cards[1:]:	
-					message += cardValueName(card.value) + ", "
+					message += "{0}, ".format(cardValueName(card.value))
 			else:
 				for card in self.side_cards:	
-					message += cardValueName(card.value) + ", "
+					message += "{0}, ".format(cardValueName(card.value))
 
-			message = message[0:-2] + " side cards"
+			message = "{0} side cards".format(message[0:-2])
 
 		return message
 			
@@ -163,10 +177,10 @@ class ScoredPokerHand(object):
 
 	def __init__(self, list_of_cards):
 		if len(list_of_cards) != 7:
-			raise ScoredPokerHandInitializationCardNumberError('Expected 7 cards, was given {}'.format( len(list_of_cards)))
+			raise ScoredPokerHandInitializationCardNumberError('Expected 7 cards, was given {0}'.format( len(list_of_cards)))
 		for card in list_of_cards:
 			if not isinstance(card, Card):
-				raise ScoredPokerHandInitializationCardTypeError('Expected elements of type Card, found element of type ' + str(type(card)))
+				raise ScoredPokerHandInitializationCardTypeError('Expected elements of type Card, found element of type {0}'.format(str(type(card))))
 
 		self.played_cards = []
 		self.unplayed_cards = []
@@ -175,7 +189,7 @@ class ScoredPokerHand(object):
 
 		for card in list_of_cards:
 			if list_of_cards.count(card) > 1:
-				raise ScoredPokerHandInitializationCardUniquenessError('Expected all cards unique, found two instance of ' + str(card))
+				raise ScoredPokerHandInitializationCardUniquenessError('Expected all cards unique, found two instances of {0}'.format(str(card)))
 		
 		value_histogram, inverse_value_histogram = createHistograms([card.value for card in list_of_cards])
 		suit_histogram, inverse_suit_histogram = createHistograms([card.suit for card in list_of_cards])
