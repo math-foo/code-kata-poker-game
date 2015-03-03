@@ -509,6 +509,451 @@ class testScoredPokerHandScoreMessage(unittest.TestCase):
 		self.assertEquals("High Card: Ace high, Nine, Eight, Seven, Five side cards", ace_high_hand.score_message())
 
 
+class testScoredPokerHandCmp(unittest.TestCase):
+	def test_RoyalFlushRoyalFlush(self):
+		royal_flush_1 = cardListCreator([(0,14),(0,13),(0,12),(0,11),(0,10),(1,2),(2,3)])
+		royal_flush_2 = cardListCreator([(3,14),(3,13),(3,12),(3,11),(3,10),(2,2),(1,3)])
+		royal_flush_hand_1 = poker_hand.ScoredPokerHand(royal_flush_1)
+		royal_flush_hand_2 = poker_hand.ScoredPokerHand(royal_flush_2)
+
+		self.assertFalse(royal_flush_hand_1 < royal_flush_hand_2)
+		self.assertFalse(royal_flush_hand_1 > royal_flush_hand_2)
+
+	def test_StraightFlushRoyalFlush(self):
+		straight_flush = cardListCreator([(2,13),(2,12),(2,11),(2,10),(2,9),(1,2),(0,3)])
+		royal_flush = cardListCreator([(3,14),(3,13),(3,12),(3,11),(3,10),(2,2),(1,3)])
+		straight_flush_hand = poker_hand.ScoredPokerHand(straight_flush)
+		royal_flush_hand = poker_hand.ScoredPokerHand(royal_flush)
+
+		self.assertFalse(royal_flush_hand < straight_flush_hand)
+		self.assertTrue(royal_flush_hand > straight_flush_hand)
+
+	def test_AceLowStraightFlushRoyalFlush(self):
+		royal_flush = cardListCreator([(2,14),(2,13),(2,12),(2,11),(2,10),(1,2),(0,3)])
+		straight_flush = cardListCreator([(3,14),(3,2),(3,3),(3,4),(3,5),(2,7),(1,3)])
+		royal_flush_hand = poker_hand.ScoredPokerHand(royal_flush)
+		straight_flush_hand = poker_hand.ScoredPokerHand(straight_flush)
+
+		self.assertFalse(royal_flush_hand < straight_flush_hand)
+		self.assertTrue(royal_flush_hand > straight_flush_hand)
+
+	def test_StraightFlushEqStraightFlush(self):
+		straight_flush_1 = cardListCreator([(2,13),(2,12),(2,11),(2,10),(2,9),(1,2),(0,3)])
+		straight_flush_2 = cardListCreator([(3,13),(3,12),(3,11),(3,10),(3,9),(1,2),(0,3)])
+		straight_flush_hand_1 = poker_hand.ScoredPokerHand(straight_flush_1)
+		straight_flush_hand_2 = poker_hand.ScoredPokerHand(straight_flush_2)
+
+		self.assertFalse(straight_flush_hand_1 < straight_flush_hand_2)
+		self.assertFalse(straight_flush_hand_1 > straight_flush_hand_2)
+
+	def test_StraightFlushNeqStraightFlush(self):
+		straight_flush_1 = cardListCreator([(2,13),(2,12),(2,11),(2,10),(2,9),(1,2),(0,3)])
+		straight_flush_2 = cardListCreator([(3,10),(3,9),(3,8),(3,7),(3,6),(1,2),(0,3)])
+		straight_flush_hand_1 = poker_hand.ScoredPokerHand(straight_flush_1)
+		straight_flush_hand_2 = poker_hand.ScoredPokerHand(straight_flush_2)
+
+		self.assertFalse(straight_flush_hand_1 < straight_flush_hand_2)
+		self.assertTrue(straight_flush_hand_1 > straight_flush_hand_2)
+
+	def test_StraightFlushNeqAceLowStraightFlush(self):
+		straight_flush_1 = cardListCreator([(2,14),(2,2),(2,3),(2,4),(2,5),(1,2),(0,3)])
+		straight_flush_2 = cardListCreator([(3,10),(3,9),(3,8),(3,7),(3,6),(1,2),(0,3)])
+		straight_flush_hand_1 = poker_hand.ScoredPokerHand(straight_flush_1)
+		straight_flush_hand_2 = poker_hand.ScoredPokerHand(straight_flush_2)
+
+		self.assertTrue(straight_flush_hand_1 < straight_flush_hand_2)
+		self.assertFalse(straight_flush_hand_1 > straight_flush_hand_2)
+
+	def test_StraightFlushFourKind(self):
+		four_of_a_kind = cardListCreator([(3,14),(2,14),(1,14),(0,14),(0,11),(2,11),(3,11)])
+		straight_flush = cardListCreator([(3,14),(3,2),(3,3),(3,4),(3,5),(2,7),(1,3)])
+		four_of_a_kind_hand = poker_hand.ScoredPokerHand(four_of_a_kind)
+		straight_flush_hand = poker_hand.ScoredPokerHand(straight_flush)
+
+		self.assertTrue(four_of_a_kind_hand < straight_flush_hand)
+		self.assertFalse(four_of_a_kind_hand > straight_flush_hand)
+
+	def test_FourOfAKindEqFourOfAKind(self):
+		four_of_a_kind_1 = cardListCreator([(3,7),(2,7),(1,7),(0,7),(0,11),(2,6),(3,8)])
+		four_of_a_kind_2 = cardListCreator([(3,7),(2,7),(1,7),(0,7),(0,11),(2,5),(3,8)])
+		four_hand_1 = poker_hand.ScoredPokerHand(four_of_a_kind_1)
+		four_hand_2 = poker_hand.ScoredPokerHand(four_of_a_kind_2)
+
+		self.assertFalse(four_hand_1 < four_hand_2)
+		self.assertFalse(four_hand_1 > four_hand_2)
+
+	def test_FourOfAKindNeqFourOfAKind(self):
+		four_of_a_kind_1 = cardListCreator([(3,7),(2,7),(1,7),(0,7),(0,11),(2,6),(3,8)])
+		four_of_a_kind_2 = cardListCreator([(3,9),(2,9),(1,9),(0,9),(0,11),(2,5),(3,8)])
+		four_hand_1 = poker_hand.ScoredPokerHand(four_of_a_kind_1)
+		four_hand_2 = poker_hand.ScoredPokerHand(four_of_a_kind_2)
+
+		self.assertTrue(four_hand_1 < four_hand_2)
+		self.assertFalse(four_hand_1 > four_hand_2)
+
+	def test_FourOfAKindNeqFourOfAKindKicker(self):
+		four_of_a_kind_1 = cardListCreator([(3,7),(2,7),(1,7),(0,7),(0,14),(2,6),(3,8)])
+		four_of_a_kind_2 = cardListCreator([(3,7),(2,7),(1,7),(0,7),(0,10),(2,5),(3,8)])
+		four_hand_1 = poker_hand.ScoredPokerHand(four_of_a_kind_1)
+		four_hand_2 = poker_hand.ScoredPokerHand(four_of_a_kind_2)
+
+		self.assertFalse(four_hand_1 < four_hand_2)
+		self.assertTrue(four_hand_1 > four_hand_2)
+
+	def test_FourOfAKindFullHouse(self):
+		four_of_a_kind = cardListCreator([(3,2),(2,2),(1,2),(0,2),(0,11),(2,11),(3,11)])
+		full_house = cardListCreator([(3,14),(2,14),(1,14),(0,13),(1,13),(2,11),(3,11)])
+		four_of_a_kind_hand = poker_hand.ScoredPokerHand(four_of_a_kind)
+		full_house_hand = poker_hand.ScoredPokerHand(full_house)
+
+		self.assertFalse(four_of_a_kind_hand < full_house_hand)
+		self.assertTrue(four_of_a_kind_hand > full_house_hand)
+
+	def test_FourOfAKindFullHouse(self):
+		four_of_a_kind = cardListCreator([(3,2),(2,2),(1,2),(0,2),(0,11),(2,11),(3,11)])
+		full_house = cardListCreator([(3,14),(2,14),(1,14),(0,13),(1,13),(2,11),(3,11)])
+		four_of_a_kind_hand = poker_hand.ScoredPokerHand(four_of_a_kind)
+		full_house_hand = poker_hand.ScoredPokerHand(full_house)
+
+		self.assertFalse(four_of_a_kind_hand < full_house_hand)
+		self.assertTrue(four_of_a_kind_hand > full_house_hand)
+
+	def test_FullHouseEqFullHouse(self):
+		full_house_1 = cardListCreator([(3,7),(2,7),(1,7),(0,4),(1,4),(2,2),(3,3)])
+		full_house_2 = cardListCreator([(3,7),(0,7),(1,7),(2,4),(1,4),(2,11),(3,11)])
+		full_house_hand_1 = poker_hand.ScoredPokerHand(full_house_1)
+		full_house_hand_2 = poker_hand.ScoredPokerHand(full_house_2)
+
+		self.assertFalse(full_house_hand_1 < full_house_hand_2)
+		self.assertFalse(full_house_hand_1 > full_house_hand_2)
+
+	def test_FullHouseNeqFullHouseValue(self):
+		full_house_1 = cardListCreator([(3,5),(2,5),(1,5),(0,13),(1,13),(2,2),(3,3)])
+		full_house_2 = cardListCreator([(3,13),(0,13),(1,13),(2,5),(1,5),(2,11),(3,11)])
+		full_house_hand_1 = poker_hand.ScoredPokerHand(full_house_1)
+		full_house_hand_2 = poker_hand.ScoredPokerHand(full_house_2)
+
+		self.assertFalse(full_house_hand_1 < full_house_hand_2)
+		self.assertTrue(full_house_hand_1 > full_house_hand_2)
+
+	def test_FullHouseNeqFullHouseValue(self):
+		full_house_1 = cardListCreator([(3,4),(2,4),(1,4),(0,6),(1,6),(2,2),(3,3)])
+		full_house_2 = cardListCreator([(3,2),(0,2),(1,2),(2,6),(1,6),(2,11),(3,11)])
+		full_house_hand_1 = poker_hand.ScoredPokerHand(full_house_1)
+		full_house_hand_2 = poker_hand.ScoredPokerHand(full_house_2)
+
+		self.assertFalse(full_house_hand_1 < full_house_hand_2)
+		self.assertTrue(full_house_hand_1 > full_house_hand_2)
+
+	def test_FullHouseNeqFullHouseSecondaryValue(self):
+		full_house_1 = cardListCreator([(3,10),(2,10),(1,10),(0,3),(1,3),(2,2),(3,3)])
+		full_house_2 = cardListCreator([(3,10),(0,10),(1,10),(2,4),(1,4),(2,7),(3,11)])
+		full_house_hand_1 = poker_hand.ScoredPokerHand(full_house_1)
+		full_house_hand_2 = poker_hand.ScoredPokerHand(full_house_2)
+
+		self.assertTrue(full_house_hand_1 < full_house_hand_2)
+		self.assertFalse(full_house_hand_1 > full_house_hand_2)
+
+	def test_FullHouseFlush(self):
+		full_house = cardListCreator([(3,2),(2,2),(1,2),(0,3),(1,3),(2,6),(3,7)])
+		flush = cardListCreator([(3,14),(3,13),(3,12),(3,11),(3,9),(2,11),(1,11)])
+		full_house_hand = poker_hand.ScoredPokerHand(full_house)
+		flush_hand = poker_hand.ScoredPokerHand(flush)
+
+		self.assertTrue(flush_hand < full_house_hand)
+		self.assertFalse(flush_hand > full_house_hand)
+
+	def test_FlushEqFlush(self):
+		flush_1 = cardListCreator([(3,14),(3,13),(3,12),(3,11),(3,9),(2,11),(1,11)])
+		flush_2 = cardListCreator([(0,14),(0,13),(0,12),(0,11),(0,9),(2,11),(1,11)])
+		flush_hand_1 = poker_hand.ScoredPokerHand(flush_1)
+		flush_hand_2 = poker_hand.ScoredPokerHand(flush_2)
+
+		self.assertFalse(flush_hand_1 < flush_hand_2)
+		self.assertFalse(flush_hand_1 > flush_hand_2)
+
+	def test_FlushNeqFlushValue(self):
+		flush_1 = cardListCreator([(3,14),(3,13),(3,12),(3,11),(3,9),(2,11),(1,11)])
+		flush_2 = cardListCreator([(0,13),(0,12),(0,11),(0,7),(0,8),(2,11),(1,11)])
+		flush_hand_1 = poker_hand.ScoredPokerHand(flush_1)
+		flush_hand_2 = poker_hand.ScoredPokerHand(flush_2)
+
+		self.assertFalse(flush_hand_1 < flush_hand_2)
+		self.assertTrue(flush_hand_1 > flush_hand_2)
+
+	def test_FlushNeqFlushSide1(self):
+		flush_1 = cardListCreator([(3,14),(3,13),(3,12),(3,11),(3,9),(2,11),(1,11)])
+		flush_2 = cardListCreator([(0,14),(0,12),(0,11),(0,10),(0,9),(2,11),(1,11)])
+		flush_hand_1 = poker_hand.ScoredPokerHand(flush_1)
+		flush_hand_2 = poker_hand.ScoredPokerHand(flush_2)
+
+		self.assertFalse(flush_hand_1 < flush_hand_2)
+		self.assertTrue(flush_hand_1 > flush_hand_2)
+
+	def test_FlushNeqFlushSide2(self):
+		flush_1 = cardListCreator([(3,14),(3,13),(3,12),(3,11),(3,9),(2,11),(1,11)])
+		flush_2 = cardListCreator([(0,14),(0,13),(0,11),(0,10),(0,9),(2,11),(1,11)])
+		flush_hand_1 = poker_hand.ScoredPokerHand(flush_1)
+		flush_hand_2 = poker_hand.ScoredPokerHand(flush_2)
+
+		self.assertFalse(flush_hand_1 < flush_hand_2)
+		self.assertTrue(flush_hand_1 > flush_hand_2)
+
+	def test_FlushNeqFlushSide3(self):
+		flush_1 = cardListCreator([(3,14),(3,13),(3,12),(3,11),(3,9),(2,11),(1,11)])
+		flush_2 = cardListCreator([(0,14),(0,13),(0,12),(0,10),(0,9),(2,11),(1,11)])
+		flush_hand_1 = poker_hand.ScoredPokerHand(flush_1)
+		flush_hand_2 = poker_hand.ScoredPokerHand(flush_2)
+
+		self.assertFalse(flush_hand_1 < flush_hand_2)
+		self.assertTrue(flush_hand_1 > flush_hand_2)
+
+	def test_FlushNeqFlushSide4(self):
+		flush_1 = cardListCreator([(3,14),(3,13),(3,12),(3,11),(3,9),(2,11),(1,11)])
+		flush_2 = cardListCreator([(0,14),(0,13),(0,12),(0,11),(0,8),(2,11),(1,11)])
+		flush_hand_1 = poker_hand.ScoredPokerHand(flush_1)
+		flush_hand_2 = poker_hand.ScoredPokerHand(flush_2)
+
+		self.assertFalse(flush_hand_1 < flush_hand_2)
+		self.assertTrue(flush_hand_1 > flush_hand_2)
+
+	def test_FlushStraight(self):
+		straight = cardListCreator([(2,14),(2,13),(1,12),(0,11),(2,10),(3,4),(2,2)])
+		flush = cardListCreator([(3,7),(3,5),(3,4),(3,3),(3,2),(2,11),(1,11)])
+		flush_hand = poker_hand.ScoredPokerHand(flush)
+		straight_hand = poker_hand.ScoredPokerHand(straight)
+
+		self.assertFalse(flush_hand < straight_hand)
+		self.assertTrue(flush_hand > straight_hand)
+
+
+	def test_StraightEqStraight(self):
+		straight_1 = cardListCreator([(2,10),(2,9),(1,8),(0,7),(2,6),(3,4),(2,2)])
+		straight_2 = cardListCreator([(0,10),(2,9),(3,8),(1,7),(1,6),(3,4),(2,2)])
+		straight_hand_1 = poker_hand.ScoredPokerHand(straight_1)
+		straight_hand_2 = poker_hand.ScoredPokerHand(straight_2)
+
+		self.assertFalse(straight_hand_1 < straight_hand_2)
+		self.assertFalse(straight_hand_1 > straight_hand_2)
+
+	def test_StraightNeqStraight(self):
+		straight_1 = cardListCreator([(2,10),(2,9),(1,8),(0,7),(2,6),(3,4),(2,2)])
+		straight_2 = cardListCreator([(0,7),(2,6),(3,5),(1,4),(1,3),(3,10),(2,14)])
+		straight_hand_1 = poker_hand.ScoredPokerHand(straight_1)
+		straight_hand_2 = poker_hand.ScoredPokerHand(straight_2)
+
+		self.assertFalse(straight_hand_1 < straight_hand_2)
+		self.assertTrue(straight_hand_1 > straight_hand_2)
+
+	def test_StraightThreeOfAKind(self):
+		straight = cardListCreator([(2,14),(2,2),(1,3),(0,4),(2,5),(3,8),(2,10)])
+		three_of_a_kind = cardListCreator([(1,14),(3,13),(3,14),(1,12),(2,14),(2,9),(3,6)])
+		straight_hand = poker_hand.ScoredPokerHand(straight)
+		three_hand = poker_hand.ScoredPokerHand(three_of_a_kind)
+
+		self.assertTrue(three_hand < straight_hand)
+		self.assertFalse(three_hand > straight_hand)
+
+	def test_ThreeOfAKindEqThreeOfAKind(self):
+		three_of_a_kind_1 = cardListCreator([(1,14),(2,13),(3,14),(1,12),(2,14),(2,9),(3,5)])
+		three_of_a_kind_2 = cardListCreator([(1,14),(3,13),(0,14),(0,12),(2,14),(2,5),(3,6)])
+		three_hand_1 = poker_hand.ScoredPokerHand(three_of_a_kind_1)
+		three_hand_2 = poker_hand.ScoredPokerHand(three_of_a_kind_2)
+
+		self.assertFalse(three_hand_1 < three_hand_2)
+		self.assertFalse(three_hand_1 > three_hand_1)
+
+	def test_ThreeOfAKindNeqThreeOfAKindValue(self):
+		three_of_a_kind_1 = cardListCreator([(1,10),(2,13),(3,10),(1,12),(2,10),(2,9),(3,5)])
+		three_of_a_kind_2 = cardListCreator([(1,8),(3,13),(0,8),(0,12),(2,8),(2,5),(3,6)])
+		three_hand_1 = poker_hand.ScoredPokerHand(three_of_a_kind_1)
+		three_hand_2 = poker_hand.ScoredPokerHand(three_of_a_kind_2)
+
+		self.assertFalse(three_hand_1 < three_hand_2)
+		self.assertTrue(three_hand_1 > three_hand_2)
+
+	def test_ThreeOfAKindNeqThreeOfAKindSide1(self):
+		three_of_a_kind_1 = cardListCreator([(1,6),(2,9),(3,6),(1,12),(2,6),(2,2),(3,5)])
+		three_of_a_kind_2 = cardListCreator([(1,6),(3,10),(0,6),(0,12),(2,6),(2,5),(3,6)])
+		three_hand_1 = poker_hand.ScoredPokerHand(three_of_a_kind_1)
+		three_hand_2 = poker_hand.ScoredPokerHand(three_of_a_kind_2)
+
+		self.assertTrue(three_hand_1 < three_hand_2)
+		self.assertFalse(three_hand_1 > three_hand_2)
+
+	def test_ThreeOfAKindNeqThreeOfAKindSide2(self):
+		three_of_a_kind_1 = cardListCreator([(1,4),(2,13),(3,4),(1,12),(2,4),(2,9),(3,5)])
+		three_of_a_kind_2 = cardListCreator([(1,4),(3,13),(0,4),(0,10),(2,4),(2,5),(3,6)])
+		three_hand_1 = poker_hand.ScoredPokerHand(three_of_a_kind_1)
+		three_hand_2 = poker_hand.ScoredPokerHand(three_of_a_kind_2)
+
+		self.assertFalse(three_hand_1 < three_hand_2)
+		self.assertTrue(three_hand_1 > three_hand_2)
+
+	def test_ThreeOfAKindTwoPair(self):
+		three_of_a_kind = cardListCreator([(1,3),(3,4),(3,2),(1,2),(2,2),(2,5),(3,7)])
+		two_pair = cardListCreator([(3,14),(3,13),(3,12),(1,14),(2,13),(2,9),(3,7)])
+		three_hand = poker_hand.ScoredPokerHand(three_of_a_kind)
+		two_pair_hand = poker_hand.ScoredPokerHand(two_pair)
+
+		self.assertFalse(three_hand < two_pair_hand)
+		self.assertTrue(three_hand > two_pair_hand)
+
+
+	def test_TwoPairEqTwoPair(self):
+		two_pair_1 = cardListCreator([(3,14),(3,13),(3,12),(1,7),(2,9),(0,9),(3,7)])
+		two_pair_2 = cardListCreator([(3,9),(3,7),(3,12),(1,14),(2,13),(2,9),(0,7)])
+		two_pair_hand_1 = poker_hand.ScoredPokerHand(two_pair_1)
+		two_pair_hand_2 = poker_hand.ScoredPokerHand(two_pair_2)
+
+		self.assertFalse(two_pair_hand_1 < two_pair_hand_2)
+		self.assertFalse(two_pair_hand_1 > two_pair_hand_2)
+
+
+	def test_TwoPairNeqTwoPairValue(self):
+		two_pair_1 = cardListCreator([(3,9),(3,7),(3,12),(1,14),(2,13),(2,9),(0,7)])
+		two_pair_2 = cardListCreator([(3,9),(3,8),(3,12),(1,14),(2,13),(2,9),(1,8)])
+		two_pair_hand_1 = poker_hand.ScoredPokerHand(two_pair_1)
+		two_pair_hand_2 = poker_hand.ScoredPokerHand(two_pair_2)
+
+		self.assertTrue(two_pair_hand_1 < two_pair_hand_2)
+		self.assertFalse(two_pair_hand_1 > two_pair_hand_2)
+
+
+	def test_TwoPairNeqTwoPairSecondaryValue(self):
+		two_pair_1 = cardListCreator([(3,9),(3,5),(3,12),(1,14),(2,13),(2,9),(0,5)])
+		two_pair_2 = cardListCreator([(3,9),(3,7),(3,12),(1,14),(2,13),(2,9),(1,7)])
+		two_pair_hand_1 = poker_hand.ScoredPokerHand(two_pair_1)
+		two_pair_hand_2 = poker_hand.ScoredPokerHand(two_pair_2)
+
+		self.assertTrue(two_pair_hand_1 < two_pair_hand_2)
+		self.assertFalse(two_pair_hand_1 > two_pair_hand_2)
+
+	def test_TwoPairNeqTwoPairKicker(self):
+		two_pair_1 = cardListCreator([(3,9),(3,7),(3,12),(1,14),(2,13),(2,9),(0,7)])
+		two_pair_2 = cardListCreator([(3,9),(3,7),(3,12),(1,4),(2,13),(2,9),(1,7)])
+		two_pair_hand_1 = poker_hand.ScoredPokerHand(two_pair_1)
+		two_pair_hand_2 = poker_hand.ScoredPokerHand(two_pair_2)
+
+		self.assertFalse(two_pair_hand_1 < two_pair_hand_2)
+		self.assertTrue(two_pair_hand_1 > two_pair_hand_2)
+
+	def test_TwoPairPair(self):
+		two_pair = cardListCreator([(3,2),(3,3),(0,2),(1,3),(2,4),(2,5),(3,7)])
+		pair = cardListCreator([(3,14),(3,13),(3,12),(1,14),(2,6),(2,10),(3,7)])
+		two_pair_hand = poker_hand.ScoredPokerHand(two_pair)
+		pair_hand = poker_hand.ScoredPokerHand(pair)
+
+		self.assertTrue(pair_hand < two_pair_hand)
+		self.assertFalse(pair_hand > two_pair_hand)
+
+	def test_PairEqPair(self):
+		pair_1 = cardListCreator([(3,9),(3,13),(3,12),(1,9),(2,6),(2,10),(3,7)])
+		pair_2 = cardListCreator([(3,9),(3,13),(3,12),(1,9),(2,4),(2,10),(3,3)])
+		pair_hand_1 = poker_hand.ScoredPokerHand(pair_1)
+		pair_hand_2 = poker_hand.ScoredPokerHand(pair_2)
+
+		self.assertFalse(pair_hand_1 < pair_hand_2)
+		self.assertFalse(pair_hand_1 > pair_hand_2)
+
+	def test_PairNeqPairValue(self):
+		pair_1 = cardListCreator([(3,10),(3,13),(3,12),(1,10),(2,6),(2,10),(3,7)])
+		pair_2 = cardListCreator([(3,9),(3,13),(3,12),(1,9),(2,4),(2,10),(3,3)])
+		pair_hand_1 = poker_hand.ScoredPokerHand(pair_1)
+		pair_hand_2 = poker_hand.ScoredPokerHand(pair_2)
+
+		self.assertFalse(pair_hand_1 < pair_hand_2)
+		self.assertTrue(pair_hand_1 > pair_hand_2)
+
+	def test_PairNeqPairSide1(self):
+		pair_1 = cardListCreator([(3,5),(3,3),(1,12),(1,10),(2,5),(2,6),(3,7)])
+		pair_2 = cardListCreator([(3,5),(0,7),(3,11),(1,5),(2,4),(2,10),(3,3)])
+		pair_hand_1 = poker_hand.ScoredPokerHand(pair_1)
+		pair_hand_2 = poker_hand.ScoredPokerHand(pair_2)
+
+		self.assertFalse(pair_hand_1 < pair_hand_2)
+		self.assertTrue(pair_hand_1 > pair_hand_2)
+
+	def test_PairNeqPairSide2(self):
+		pair_1 = cardListCreator([(3,5),(3,3),(1,11),(1,9),(2,5),(2,6),(3,7)])
+		pair_2 = cardListCreator([(3,5),(0,7),(3,11),(1,5),(2,4),(2,10),(3,3)])
+		pair_hand_1 = poker_hand.ScoredPokerHand(pair_1)
+		pair_hand_2 = poker_hand.ScoredPokerHand(pair_2)
+
+		self.assertTrue(pair_hand_1 < pair_hand_2)
+		self.assertFalse(pair_hand_1 > pair_hand_2)
+
+	def test_PairNeqPairSide3(self):
+		pair_1 = cardListCreator([(3,5),(3,3),(1,11),(1,9),(2,5),(2,4),(3,8)])
+		pair_2 = cardListCreator([(3,5),(0,7),(3,11),(1,5),(2,4),(2,9),(3,3)])
+		pair_hand_1 = poker_hand.ScoredPokerHand(pair_1)
+		pair_hand_2 = poker_hand.ScoredPokerHand(pair_2)
+
+		self.assertFalse(pair_hand_1 < pair_hand_2)
+		self.assertTrue(pair_hand_1 > pair_hand_2)
+
+	def test_PairHighCard(self):
+		pair = cardListCreator([(0,2),(3,2),(1,3),(1,4),(1,5),(2,8),(3,7)])
+		high_card= cardListCreator([(3,14),(3,13),(2,12),(1,11),(2,9),(0,8),(3,3)])
+		pair_hand = poker_hand.ScoredPokerHand(pair)
+		high_hand = poker_hand.ScoredPokerHand(high_card)
+
+		self.assertFalse(pair_hand < high_hand)
+		self.assertTrue(pair_hand > high_hand)
+
+	def test_HighCardEqHighCard(self):
+		high_card_1 = cardListCreator([(3,11),(3,9),(2,8),(1,7),(2,5),(0,4),(3,2)])
+		high_card_2 = cardListCreator([(3,11),(3,9),(2,8),(1,7),(2,5),(0,4),(3,3)])
+		high_hand_1 = poker_hand.ScoredPokerHand(high_card_1)
+		high_hand_2 = poker_hand.ScoredPokerHand(high_card_2)
+
+		self.assertFalse(high_hand_1 < high_hand_2)
+		self.assertFalse(high_hand_1 > high_hand_2)
+
+	def test_HighCardNeqHighCardValue(self):
+		high_card_1 = cardListCreator([(3,11),(3,9),(2,8),(1,7),(2,5),(0,4),(3,2)])
+		high_card_2 = cardListCreator([(3,12),(3,9),(2,8),(1,7),(2,5),(0,4),(3,3)])
+		high_hand_1 = poker_hand.ScoredPokerHand(high_card_1)
+		high_hand_2 = poker_hand.ScoredPokerHand(high_card_2)
+
+		self.assertTrue(high_hand_1 < high_hand_2)
+		self.assertFalse(high_hand_1 > high_hand_2)
+
+	def test_HighCardNeqHighCardSide1(self):
+		high_card_1 = cardListCreator([(3,11),(3,10),(2,8),(1,7),(2,5),(0,4),(3,2)])
+		high_card_2 = cardListCreator([(3,11),(3,9),(2,8),(1,7),(2,5),(0,4),(3,3)])
+		high_hand_1 = poker_hand.ScoredPokerHand(high_card_1)
+		high_hand_2 = poker_hand.ScoredPokerHand(high_card_2)
+
+		self.assertFalse(high_hand_1 < high_hand_2)
+		self.assertTrue(high_hand_1 > high_hand_2)
+
+	def test_HighCardNeqHighCardSide2(self):
+		high_card_1 = cardListCreator([(3,11),(3,10),(2,8),(1,7),(2,5),(0,4),(3,2)])
+		high_card_2 = cardListCreator([(3,11),(3,10),(2,9),(1,7),(2,5),(0,4),(3,3)])
+		high_hand_1 = poker_hand.ScoredPokerHand(high_card_1)
+		high_hand_2 = poker_hand.ScoredPokerHand(high_card_2)
+
+		self.assertTrue(high_hand_1 < high_hand_2)
+		self.assertFalse(high_hand_1 > high_hand_2)
+
+	def test_HighCardNeqHighCardSide3(self):
+		high_card_1 = cardListCreator([(3,11),(3,9),(2,8),(1,7),(2,5),(0,4),(3,2)])
+		high_card_2 = cardListCreator([(3,11),(3,9),(2,8),(1,6),(2,5),(0,4),(3,3)])
+		high_hand_1 = poker_hand.ScoredPokerHand(high_card_1)
+		high_hand_2 = poker_hand.ScoredPokerHand(high_card_2)
+
+		self.assertFalse(high_hand_1 < high_hand_2)
+		self.assertTrue(high_hand_1 > high_hand_2)
+
+	def test_HighCardNeqHighCardSide4(self):
+		high_card_1 = cardListCreator([(3,11),(3,9),(2,8),(1,7),(2,5),(0,4),(3,2)])
+		high_card_2 = cardListCreator([(3,11),(3,9),(2,8),(1,7),(2,6),(0,4),(3,3)])
+		high_hand_1 = poker_hand.ScoredPokerHand(high_card_1)
+		high_hand_2 = poker_hand.ScoredPokerHand(high_card_2)
+
+		self.assertTrue(high_hand_1 < high_hand_2)
+		self.assertFalse(high_hand_1 > high_hand_2)
 
 if __name__ == '__main__':
     unittest.main()

@@ -128,7 +128,7 @@ class PokerHandScore(object):
 		return (self.score_class, self.value, self.secondary_value) + tuple( card.value for card in self.side_cards )
 
 	def __cmp__(self, other):
-		return cmp( self.score_tuple(), other.score_tuple )
+		return cmp(self.score_tuple(), other.score_tuple())
 
 	def score_message(self, suit=None):
 		# add checks that suit is a suit
